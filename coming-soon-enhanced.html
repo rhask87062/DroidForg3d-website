@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DroidForge 3D - Coming Soon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #ffffff;
+            --accent-orange: #ff6b35;
+            --accent-blue: #00d4ff;
+            --accent-green: #00ff88;
+            --accent-purple: #8b5cf6;
+            --light-blue: #87CEEB; /* New light blue color */
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden; /* Hide scrollbars */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 0 50px rgba(0, 212, 255, 0.3);
+            animation: fadeIn 1.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-orange), var(--light-blue), var(--accent-orange));
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 4s ease-in-out infinite, glowOrange 2s ease-in-out infinite alternate;
+            margin-bottom: 1rem;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes glowOrange {
+            from { filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.5)); }
+            to { filter: drop-shadow(0 0 40px rgba(255, 107, 53, 0.8)); }
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: var(--light-blue);
+            margin-bottom: 3rem;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin-bottom: 4rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1s forwards;
+        }
+
+        .feature-card {
+            background: rgba(26, 26, 26, 0.8);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transform: translateX(-100%) rotate(45deg);
+            transition: transform 0.5s ease;
+        }
+
+        .feature-card:hover::before {
+            transform: translateX(100%) rotate(45deg);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.8; }
+            to { transform: scale(1.05); opacity: 1; }
+        }
+
+        .feature-icon.ai { color: var(--accent-blue); }
+        .feature-icon.print { color: var(--accent-orange); }
+        .feature-icon.auto { color: var(--accent-green); }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--light-blue);
+        }
+
+        .feature-description {
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+
+        .progress-section {
+            text-align: center;
+            margin-bottom: 4rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1.5s forwards;
+        }
+
+        .progress-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--text-color);
+        }
+
+        .progress-bar {
+            width: 100%;
+            max-width: 600px;
+            height: 8px;
+            background: rgba(26, 26, 26, 0.8);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-orange), var(--accent-green));
+            border-radius: 4px;
+            width: 0%;
+            animation: progressFill 3s ease-out 2s forwards;
+            position: relative;
+        }
+
+        @keyframes progressFill {
+            to { width: 75%; }
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 2s infinite 2.5s;
+        }
+
+        @keyframes shimmer {
+            to { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            font-size: 1.2rem;
+            color: var(--light-blue);
+        }
+
+        .signup-section {
+            text-align: center;
+            margin-bottom: 4rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 2s forwards;
+        }
+
+        .signup-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .signup-form {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .email-input {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid var(--accent-blue);
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text-color);
+            min-width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .notify-btn {
+            background: linear-gradient(45deg, var(--accent-orange), var(--accent-blue));
+            color: var(--text-color);
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .notify-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .notify-btn:hover::before {
+            left: 100%;
+        }
+
+        .notify-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 2.5s forwards;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .signup-form {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .email-input {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0s !important;
+                transition-duration: 0s !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="container">
+        <h1 class="logo">DROIDFORG3D</h1>
+        <p class="subtitle">Where AI meets 3D printing. Coming Soon.</p>
+        
+        <div class="features">
+            <div class="feature-card">
+                <span class="feature-icon ai">🤖</span>
+                <h3 class="feature-title">AI-Powered Design</h3>
+                <p class="feature-description">Advanced artificial intelligence transforms your ideas into stunning 3D models with unprecedented precision and creativity.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon print">🔥</span>
+                <h3 class="feature-title">Precision Printing</h3>
+                <p class="feature-description">Bring your digital creations to life with our state-of-the-art 3D printing technology, ensuring every detail is perfect.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon auto">⚡</span>
+                <h3 class="feature-title">Automated Process</h3>
+                <p class="feature-description">Experience seamless design and production with our fully automated workflow, from concept to physical product.</p>
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <h2 class="progress-title">Development Progress</h2>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <p class="progress-text">75% Complete - Launching 2025</p>
+        </div>
+
+        <div class="signup-section">
+            <h2 class="signup-title">Be the First to Know!</h2>
+            <p class="feature-description">Join our mailing list for exclusive updates, early access, and special offers.</p>
+            <form class="signup-form">
+                <input type="email" placeholder="Your Email Address" class="email-input" required>
+                <button type="submit" class="notify-btn">Notify Me</button>
+            </form>
+        </div>
+
+        <div class="footer">
+            &copy; 2025 DroidForge 3D. All rights reserved.
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let mouse = { x: undefined, y: undefined };
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                initParticles();
+            }
+
+            function initParticles() {
+                particles = [];
+                const particleCount = Math.min(250, Math.floor((canvas.width * canvas.height) / 8000)); // Increased density
+        
+                for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    size: Math.random() * 3 + 1.5,
+                    opacity: Math.random() * 0.9 + 0.3,
+                    hue: Math.random() * 40 + 10, // Orange range (10-50)
+                    life: Math.random() * 100,
+                    maxLife: 100
+                });
+                }
+            }
+
+            function animateParticles() {
+                requestAnimationFrame(animateParticles);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                particles.forEach(particle => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+
+                    if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+                    if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
+
+                    // Mouse interaction
+                    const dx = mouse.x - particle.x;
+                    const dy = mouse.y - particle.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 300) { // Increased interaction radius
+                        const forceDirectionX = dx / distance;
+                        const forceDirectionY = dy / distance;
+                        const maxForce = 10; // Stronger force
+                        const force = (maxForce * (300 - distance)) / 300;
+
+                        particle.x -= forceDirectionX * force * 0.1;
+                        particle.y -= forceDirectionY * force * 0.1;
+                    }
+
+                    ctx.save();
+                    ctx.globalAlpha = particle.opacity;
+                    
+                    // Glow effect
+                    const gradient = ctx.createRadialGradient(
+                        particle.x, particle.y, 0,
+                        particle.x, particle.y, particle.size * 5 // Larger glow
+                    );
+                    gradient.addColorStop(0, `hsla(${particle.hue}, 100%, 70%, 0.9)`); // Brighter glow
+                    gradient.addColorStop(1, `hsla(${particle.hue}, 100%, 70%, 0)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size * 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Core particle - using classic orange
+                    ctx.fillStyle = `rgba(255, 107, 53, 1)`; // Classic orange
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.restore();
+                });
+
+                // Draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 200) { // Increased connection distance
+                            const opacity = (200 - distance) / 200 * 0.4; // Higher opacity
+                            ctx.strokeStyle = `rgba(255, 107, 53, ${opacity})`; // Classic orange color
+                            ctx.lineWidth = 2; // Thicker lines
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.x;
+                mouse.y = e.y;
+            });
+
+            window.addEventListener('mouseout', () => {
+                mouse.x = undefined;
+                mouse.y = undefined;
+            });
+
+            window.addEventListener('resize', resizeCanvas);
+
+            resizeCanvas();
+            animateParticles();
+        });
+    </script>
+</body>
+</html>
+

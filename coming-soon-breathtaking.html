@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DroidForge 3D - Coming Soon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-orange: #ff6b35;
+            --light-blue: #87CEEB;
+            --electric-blue: #00d4ff;
+            --glow-orange: rgba(255, 107, 53, 0.6);
+            --glow-light-blue: rgba(135, 206, 235, 0.6);
+            --glow-electric-blue: rgba(0, 212, 255, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+        }
+
+        /* Multi-layered Canvas System */
+        .canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        #gridCanvas, #particleCanvas, #dataCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #gridCanvas { z-index: 1; }
+        #particleCanvas { z-index: 2; }
+        #dataCanvas { z-index: 3; }
+
+        /* Main Content */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.8) 70%);
+        }
+
+        /* Animated Logo */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, 
+                var(--accent-orange) 0%, 
+                var(--light-blue) 33%, 
+                var(--electric-blue) 66%, 
+                var(--accent-orange) 100%);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: logoGradient 6s ease-in-out infinite, logoGlow 3s ease-in-out infinite alternate;
+            letter-spacing: -0.02em;
+            text-shadow: 0 0 30px var(--glow-orange);
+            position: relative;
+        }
+
+        .logo::before {
+            content: 'DROIDFORG3D';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent-orange), var(--light-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: blur(20px);
+            opacity: 0.7;
+            z-index: -1;
+            animation: logoBlur 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes logoGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes logoGlow {
+            from { filter: drop-shadow(0 0 20px var(--glow-orange)) drop-shadow(0 0 40px var(--glow-light-blue)); }
+            to { filter: drop-shadow(0 0 40px var(--glow-orange)) drop-shadow(0 0 60px var(--glow-light-blue)); }
+        }
+
+        @keyframes logoBlur {
+            from { transform: scale(1.05); opacity: 0.5; }
+            to { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        /* Subtitle */
+        .subtitle {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: var(--light-blue);
+            margin-bottom: 4rem;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-out 0.5s forwards;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            width: 100%;
+            margin-bottom: 4rem;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-out 1s forwards;
+        }
+
+        /* Feature Cards */
+        .feature-card {
+            background: linear-gradient(135deg, 
+                rgba(26, 26, 26, 0.9) 0%, 
+                rgba(26, 26, 26, 0.7) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(135, 206, 235, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                transparent 0%, 
+                rgba(135, 206, 235, 0.1) 50%, 
+                transparent 100%);
+            transform: translateX(-100%) rotate(45deg);
+            transition: transform 0.6s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--light-blue);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                0 0 60px var(--glow-light-blue);
+        }
+
+        .feature-card:hover::before {
+            transform: translateX(100%) rotate(45deg);
+        }
+
+        .feature-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            animation: iconFloat 3s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 20px currentColor);
+        }
+
+        .feature-icon.ai { 
+            color: var(--electric-blue);
+            animation-delay: 0s;
+        }
+        .feature-icon.print { 
+            color: var(--accent-orange);
+            animation-delay: 1s;
+        }
+        .feature-icon.auto { 
+            color: var(--light-blue);
+            animation-delay: 2s;
+        }
+
+        @keyframes iconFloat {
+            from { transform: translateY(0px) rotate(0deg); }
+            to { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--light-blue);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            text-align: center;
+            margin-bottom: 4rem;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-out 1.5s forwards;
+        }
+
+        .progress-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .progress-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(26, 26, 26, 0.8);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, 
+                var(--electric-blue) 0%, 
+                var(--light-blue) 33%, 
+                var(--accent-orange) 66%, 
+                var(--electric-blue) 100%);
+            border-radius: 6px;
+            width: 0%;
+            animation: progressFill 3s ease-out 2s forwards;
+            position: relative;
+            box-shadow: 0 0 20px var(--glow-electric-blue);
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.4), 
+                transparent);
+            transform: translateX(-100%);
+            animation: shimmer 2s infinite 2.5s;
+        }
+
+        @keyframes progressFill {
+            to { width: 85%; }
+        }
+
+        @keyframes shimmer {
+            to { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            font-size: 1.3rem;
+            color: var(--light-blue);
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-out 2s forwards;
+        }
+
+        .cta-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .cta-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .signup-form {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .email-input {
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--light-blue);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            min-width: 320px;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 30px var(--glow-orange);
+            transform: scale(1.02);
+        }
+
+        .notify-btn {
+            background: linear-gradient(135deg, var(--accent-orange), var(--electric-blue), var(--light-blue));
+            color: var(--text-primary);
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .notify-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.3), 
+                transparent);
+            transition: all 0.5s ease;
+        }
+
+        .notify-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.5);
+        }
+
+        .notify-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Footer */
+        .footer {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-out 2.5s forwards;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .signup-form {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .email-input {
+                min-width: auto;
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-container">
+        <canvas id="gridCanvas"></canvas>
+        <canvas id="particleCanvas"></canvas>
+        <canvas id="dataCanvas"></canvas>
+    </div>
+
+    <div class="main-container">
+        <div class="logo-container">
+            <h1 class="logo">DROIDFORG3D</h1>
+        </div>
+        
+        <p class="subtitle">Where AI meets 3D printing. A stunning fusion of art and technology.</p>
+        
+        <div class="content-grid">
+            <div class="feature-card">
+                <span class="feature-icon ai">🤖</span>
+                <h3 class="feature-title">AI-Powered Design</h3>
+                <p class="feature-description">Advanced neural networks transform your wildest ideas into stunning 3D models with unprecedented precision and artistic flair.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon print">🔥</span>
+                <h3 class="feature-title">Precision Printing</h3>
+                <p class="feature-description">State-of-the-art 3D printing technology brings your digital creations to life with incredible detail and professional quality.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon auto">⚡</span>
+                <h3 class="feature-title">Automated Workflow</h3>
+                <p class="feature-description">Seamless end-to-end automation from concept to physical product, powered by intelligent systems and continuous innovation.</p>
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <h2 class="progress-title">Development Progress</h2>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+            <p class="progress-text">85% Complete - Launching Q2 2025</p>
+        </div>
+
+        <div class="cta-section">
+            <h2 class="cta-title">Be Part of the Revolution</h2>
+            <p class="cta-subtitle">Join our exclusive community for early access, behind-the-scenes updates, and special launch offers.</p>
+            <form class="signup-form">
+                <input type="email" placeholder="Enter your email address" class="email-input" required>
+                <button type="submit" class="notify-btn">Notify Me</button>
+            </form>
+        </div>
+
+        <div class="footer">
+            &copy; 2025 DroidForge 3D. Crafted with passion by Russell Haskell.
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const gridCanvas = document.getElementById('gridCanvas');
+            const particleCanvas = document.getElementById('particleCanvas');
+            const dataCanvas = document.getElementById('dataCanvas');
+            
+            const gridCtx = gridCanvas.getContext('2d');
+            const particleCtx = particleCanvas.getContext('2d');
+            const dataCtx = dataCanvas.getContext('2d');
+
+            let mouse = { x: undefined, y: undefined };
+            let particles = [];
+            let dataStreams = [];
+            let gridNodes = [];
+
+            function resizeCanvases() {
+                [gridCanvas, particleCanvas, dataCanvas].forEach(canvas => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                });
+                initSystems();
+            }
+
+            function initSystems() {
+                initParticles();
+                initDataStreams();
+                initGrid();
+            }
+
+            // Enhanced Particle System
+            function initParticles() {
+                particles = [];
+                const particleCount = Math.min(300, Math.floor((window.innerWidth * window.innerHeight) / 6000));
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const colorIndex = i % 3;
+                    let hue;
+                    switch(colorIndex) {
+                        case 0: hue = 15; break;  // Orange
+                        case 1: hue = 200; break; // Light Blue  
+                        case 2: hue = 195; break; // Electric Blue
+                    }
+                    
+                    particles.push({
+                        x: Math.random() * window.innerWidth,
+                        y: Math.random() * window.innerHeight,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        size: Math.random() * 4 + 1,
+                        opacity: Math.random() * 0.8 + 0.2,
+                        hue: hue,
+                        life: Math.random() * 100,
+                        maxLife: 100,
+                        type: Math.random() > 0.7 ? 'special' : 'normal'
+                    });
+                }
+            }
+
+            // Data Stream System
+            function initDataStreams() {
+                dataStreams = [];
+                for (let i = 0; i < 15; i++) {
+                    dataStreams.push({
+                        x: Math.random() * window.innerWidth,
+                        y: Math.random() * window.innerHeight,
+                        targetX: Math.random() * window.innerWidth,
+                        targetY: Math.random() * window.innerHeight,
+                        speed: Math.random() * 2 + 1,
+                        opacity: Math.random() * 0.6 + 0.2,
+                        hue: Math.random() * 40 + 10, // Orange range
+                        trail: []
+                    });
+                }
+            }
+
+            // Grid System
+            function initGrid() {
+                gridNodes = [];
+                const spacing = 100;
+                for (let x = 0; x < window.innerWidth; x += spacing) {
+                    for (let y = 0; y < window.innerHeight; y += spacing) {
+                        gridNodes.push({
+                            x: x,
+                            y: y,
+                            originalX: x,
+                            originalY: y,
+                            offset: 0,
+                            phase: Math.random() * Math.PI * 2
+                        });
+                    }
+                }
+            }
+
+            // Animation Functions
+            function animateGrid() {
+                gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+                gridCtx.strokeStyle = 'rgba(135, 206, 235, 0.1)';
+                gridCtx.lineWidth = 1;
+
+                const time = Date.now() * 0.001;
+
+                gridNodes.forEach(node => {
+                    // Subtle wave motion
+                    node.offset = Math.sin(time + node.phase) * 10;
+                    node.x = node.originalX + node.offset;
+                    node.y = node.originalY + Math.cos(time + node.phase) * 5;
+
+                    // Mouse interaction
+                    if (mouse.x && mouse.y) {
+                        const dx = mouse.x - node.x;
+                        const dy = mouse.y - node.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 150) {
+                            const force = (150 - distance) / 150;
+                            node.x += dx * force * 0.1;
+                            node.y += dy * force * 0.1;
+                        }
+                    }
+                });
+
+                // Draw grid lines
+                for (let i = 0; i < gridNodes.length; i++) {
+                    const node = gridNodes[i];
+                    
+                    // Horizontal lines
+                    const rightNode = gridNodes.find(n => 
+                        Math.abs(n.originalY - node.originalY) < 10 && 
+                        n.originalX === node.originalX + 100
+                    );
+                    if (rightNode) {
+                        gridCtx.beginPath();
+                        gridCtx.moveTo(node.x, node.y);
+                        gridCtx.lineTo(rightNode.x, rightNode.y);
+                        gridCtx.stroke();
+                    }
+
+                    // Vertical lines
+                    const bottomNode = gridNodes.find(n => 
+                        Math.abs(n.originalX - node.originalX) < 10 && 
+                        n.originalY === node.originalY + 100
+                    );
+                    if (bottomNode) {
+                        gridCtx.beginPath();
+                        gridCtx.moveTo(node.x, node.y);
+                        gridCtx.lineTo(bottomNode.x, bottomNode.y);
+                        gridCtx.stroke();
+                    }
+                }
+            }
+
+            function animateParticles() {
+                particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+
+                particles.forEach((particle, index) => {
+                    // Update position
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+
+                    // Boundary collision
+                    if (particle.x < 0 || particle.x > window.innerWidth) particle.vx *= -1;
+                    if (particle.y < 0 || particle.y > window.innerHeight) particle.vy *= -1;
+
+                    // Mouse interaction
+                    if (mouse.x && mouse.y) {
+                        const dx = mouse.x - particle.x;
+                        const dy = mouse.y - particle.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 200) {
+                            const force = (200 - distance) / 200;
+                            particle.x -= dx * force * 0.02;
+                            particle.y -= dy * force * 0.02;
+                        }
+                    }
+
+                    // Draw particle
+                    particleCtx.save();
+                    particleCtx.globalAlpha = particle.opacity;
+                    
+                    // Glow effect
+                    const gradient = particleCtx.createRadialGradient(
+                        particle.x, particle.y, 0,
+                        particle.x, particle.y, particle.size * 6
+                    );
+                    
+                    if (particle.type === 'special') {
+                        gradient.addColorStop(0, `hsla(25, 100%, 70%, 0.9)`); // Orange
+                        gradient.addColorStop(1, `hsla(25, 100%, 70%, 0)`);
+                    } else {
+                        gradient.addColorStop(0, `hsla(${particle.hue}, 100%, 70%, 0.8)`);
+                        gradient.addColorStop(1, `hsla(${particle.hue}, 100%, 70%, 0)`);
+                    }
+                    
+                    particleCtx.fillStyle = gradient;
+                    particleCtx.beginPath();
+                    particleCtx.arc(particle.x, particle.y, particle.size * 6, 0, Math.PI * 2);
+                    particleCtx.fill();
+                    
+                    // Core particle
+                    particleCtx.fillStyle = particle.type === 'special' ? 
+                        'rgba(255, 107, 53, 1)' : 
+                        `hsla(${particle.hue}, 100%, 80%, 1)`;
+                    particleCtx.beginPath();
+                    particleCtx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    particleCtx.fill();
+                    
+                    particleCtx.restore();
+                });
+
+                // Draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 150) {
+                            const opacity = (150 - distance) / 150 * 0.3;
+                            particleCtx.strokeStyle = `rgba(135, 206, 235, ${opacity})`;
+                            particleCtx.lineWidth = 1.5;
+                            particleCtx.beginPath();
+                            particleCtx.moveTo(particles[i].x, particles[i].y);
+                            particleCtx.lineTo(particles[j].x, particles[j].y);
+                            particleCtx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animateDataStreams() {
+                dataCtx.clearRect(0, 0, dataCanvas.width, dataCanvas.height);
+
+                dataStreams.forEach(stream => {
+                    // Move towards target
+                    const dx = stream.targetX - stream.x;
+                    const dy = stream.targetY - stream.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance > 5) {
+                        stream.x += (dx / distance) * stream.speed;
+                        stream.y += (dy / distance) * stream.speed;
+                    } else {
+                        // New target
+                        stream.targetX = Math.random() * window.innerWidth;
+                        stream.targetY = Math.random() * window.innerHeight;
+                    }
+
+                    // Add to trail
+                    stream.trail.push({ x: stream.x, y: stream.y });
+                    if (stream.trail.length > 20) {
+                        stream.trail.shift();
+                    }
+
+                    // Draw trail
+                    dataCtx.strokeStyle = `hsla(${stream.hue}, 100%, 60%, ${stream.opacity})`;
+                    dataCtx.lineWidth = 2;
+                    dataCtx.beginPath();
+                    
+                    for (let i = 1; i < stream.trail.length; i++) {
+                        const alpha = (i / stream.trail.length) * stream.opacity;
+                        dataCtx.globalAlpha = alpha;
+                        
+                        if (i === 1) {
+                            dataCtx.moveTo(stream.trail[i-1].x, stream.trail[i-1].y);
+                        }
+                        dataCtx.lineTo(stream.trail[i].x, stream.trail[i].y);
+                    }
+                    dataCtx.stroke();
+                    dataCtx.globalAlpha = 1;
+
+                    // Draw head
+                    dataCtx.fillStyle = `hsla(${stream.hue}, 100%, 70%, ${stream.opacity})`;
+                    dataCtx.beginPath();
+                    dataCtx.arc(stream.x, stream.y, 3, 0, Math.PI * 2);
+                    dataCtx.fill();
+                });
+            }
+
+            function animate() {
+                animateGrid();
+                animateParticles();
+                animateDataStreams();
+                requestAnimationFrame(animate);
+            }
+
+            // Event listeners
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            window.addEventListener('mouseout', () => {
+                mouse.x = undefined;
+                mouse.y = undefined;
+            });
+
+            window.addEventListener('resize', resizeCanvases);
+
+            // Initialize
+            resizeCanvases();
+            animate();
+
+            // Form handling
+            document.querySelector('.signup-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.querySelector('.email-input').value;
+                if (email) {
+                    alert('Thank you for your interest! We\'ll notify you when DroidForge 3D launches.');
+                    document.querySelector('.email-input').value = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
