@@ -1,6 +1,6 @@
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { SignInForm } from "./SignInForm";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { HomePage } from "./pages/HomePage";
@@ -78,7 +78,7 @@ function App() {
                   <Header />
                   <main className="flex-1">
                     <Routes>
-                      <Route path="/" element={<HomePage />} />
+                      <Route path="/" element={<MainAppRoutes />} />
                       <Route path="/about" element={<AboutUs />} />
                       <Route path="/contact" element={<Contact />} />
                       <Route path="/blog" element={<Blog />} />
@@ -105,6 +105,14 @@ function App() {
       <Toaster position="top-right" />
     </main>
   );
+}
+
+function MainAppRoutes() {
+  const location = useLocation();
+  if (VisitTracker.shouldShowSplash() && location.pathname !== "/splash") {
+    return <Navigate to="/splash" replace />;
+  }
+  // ...rest of your main app rendering
 }
 
 export default App;
