@@ -3,11 +3,11 @@ import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { useSplashNavigation } from '../components/SplashRouter';
 
 // Enhanced Particle Background Component
-const ParticleBackground = ({ section = 'hero' }) => {
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
-  const particlesRef = useRef([]);
-  const mouseRef = useRef({ x: 0, y: 0 });
+const ParticleBackground = ({ section = 'hero' }: { section?: string }) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const particlesRef = useRef<any[]>([]);
+  const mouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -44,7 +44,7 @@ const ParticleBackground = ({ section = 'hero' }) => {
       }
     };
 
-    const getHueForSection = (sectionType) => {
+    const getHueForSection = (sectionType: string) => {
       switch (sectionType) {
         case 'hero': return 25; // Classic orange (#ff6b35)
         case 'ai': return 200; // Electric blue (#00d4ff)
@@ -56,7 +56,7 @@ const ParticleBackground = ({ section = 'hero' }) => {
     };
 
     const updateParticles = () => {
-      particlesRef.current.forEach((particle, index) => {
+      particlesRef.current.forEach((particle: any, index: number) => {
         // Update position
         particle.x += particle.vx;
         particle.y += particle.vy;
@@ -116,7 +116,7 @@ const ParticleBackground = ({ section = 'hero' }) => {
     };
 
     const drawParticles = () => {
-      particlesRef.current.forEach(particle => {
+      particlesRef.current.forEach((particle: any) => {
         ctx.save();
         ctx.globalAlpha = particle.opacity;
 
@@ -149,7 +149,7 @@ const ParticleBackground = ({ section = 'hero' }) => {
       });
     };
 
-    const drawPolygon = (ctx, x, y, size, sides, hue) => {
+    const drawPolygon = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, sides: number, hue: number) => {
       const angle = (Math.PI * 2) / sides;
       
       // Glow effect for geometric shapes
@@ -193,7 +193,7 @@ const ParticleBackground = ({ section = 'hero' }) => {
     };
 
     // Mouse tracking
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current.x = e.clientX;
       mouseRef.current.y = e.clientY;
     };
@@ -222,7 +222,7 @@ const ParticleBackground = ({ section = 'hero' }) => {
 };
 
 // Dynamic Background Component
-const DynamicBackground = ({ section }) => {
+const DynamicBackground = ({ section }: { section: string }) => {
   const getBackgroundStyle = () => {
     switch (section) {
       case 'hero':
@@ -264,11 +264,11 @@ const DynamicBackground = ({ section }) => {
 
 // Interactive 3D Model Component
 const Interactive3DModel = () => {
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
-  const modelRef = useRef(null);
+  const [rotation, setRotation] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const modelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       if (modelRef.current) {
         const rect = modelRef.current.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
@@ -335,9 +335,14 @@ const Interactive3DModel = () => {
 };
 
 // Enhanced Section Components
-const HeroSection = ({ navigateToMainApp }) => {
+type HeroSectionProps = { navigateToMainApp: () => void };
+const HeroSection: React.FC<HeroSectionProps> = ({ navigateToMainApp }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
+  const navigate = useSplashNavigation().navigateToMainApp;
+  const galleryNav = () => {
+    window.location.href = '/gallery';
+  };
 
   return (
     <motion.section
@@ -388,6 +393,7 @@ const HeroSection = ({ navigateToMainApp }) => {
           </motion.button>
           
           <motion.button
+            onClick={galleryNav}
             className="px-8 py-4 border-2 border-orange-400 text-orange-400 font-bold rounded-lg text-lg hover:bg-orange-400 hover:text-black transition-all duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

@@ -13,14 +13,21 @@ export const SplashRouter: React.FC<{ children: React.ReactNode }> = ({ children
     // Check if user should see splash page
     const shouldShowSplash = VisitTracker.shouldShowSplash();
     
-    if (!shouldShowSplash) {
-      // User has visited 4+ times, redirect to main app
+    if (!shouldShowSplash && window.location.pathname === '/splash') {
+      // User has visited 4+ times, redirect to main app if on splash
       navigate('/', { replace: true });
+      return;
+    }
+    if (shouldShowSplash && window.location.pathname !== '/splash') {
+      // User should see splash, but is not on splash route
+      navigate('/splash', { replace: true });
       return;
     }
 
     // Increment visit count for this session
-    VisitTracker.incrementVisitCount();
+    if (shouldShowSplash) {
+      VisitTracker.incrementVisitCount();
+    }
   }, [navigate]);
 
   // If we reach here, user should see the splash page
